@@ -56,12 +56,7 @@ class InMemoryRecordService(RecordService):
     @classmethod
     def update_record(cls, id: int, data: dict[str, str]) -> "Record":
         entry = cls.data[id]
-
-        for key, value in data.items():
-            if value:
-                entry.data[key] = value
-            else:
-                entry.data.pop(key, None)
+        entry.update_data(data)
 
         return entry
 
@@ -102,12 +97,8 @@ class SqliteRecordService(RecordService):
     def update_record(cls, id: int, data: dict[str, str]) -> "Record":
         """Update record with changes to the data dict."""
         record = cls.get_record(id)
-        for key, value in data.items():
-            if value:
-                record.data[key] = value
-            else:
-                record.data.pop(key, None)
-
+        record.update_data(data)
+        
         pickled_data = jsonpickle.encode(record.data)
 
         db_connection = sqlite3.connect('record-service.db')

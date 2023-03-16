@@ -1,7 +1,7 @@
 from api.exceptions import ResourceKeyInvalidError
 
+
 def validate_record_id(id: str) -> int:
-    print(id)
     try:
         int_id = int(id)
         assert int_id > 0
