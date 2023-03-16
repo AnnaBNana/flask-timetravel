@@ -1,3 +1,4 @@
+import sqlite3
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -17,17 +18,22 @@ class RecordAlreadyExistsError(RecordError):
 
 
 class RecordService:
+    """A base class for record services"""
+    @classmethod
     def get_record(self, id: int) -> "Record":
         raise NotImplementedError
 
+    @classmethod
     def create_record(self, record: "Record") -> None:
         raise NotImplementedError
 
+    @classmethod
     def update_record(self, id: int, data: dict[str, str]) -> "Record":
         raise NotImplementedError
 
 
 class InMemoryRecordService(RecordService):
+    """Record service implementation for in-memory storage."""
     data: dict[int, "Record"] = {}
 
     @classmethod
@@ -60,3 +66,22 @@ class InMemoryRecordService(RecordService):
                 entry.data.pop(key, None)
 
         return entry
+
+
+class SqliteRecordService(RecordService):
+    """Record service impplementation for Sqlite3."""
+    @classmethod
+    def _get_cursor(cls):
+        return sqlite3.connect("record-service.db")
+    
+    @classmethod
+    def get_record(self, id: int) -> "Record":
+        return super().get_record(id)
+
+    @classmethod
+    def create_record(self, record: "Record") -> None:
+        return super().create_record(record)
+    
+    @classmethod
+    def update_record(self, id: int, data: dict[str, str]) -> "Record":
+        return super().update_record(id, data)
