@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from api.helpers import validate_record_id
 from entity.record import Record
-from service.record import InMemoryRecordService, RecordDoesNotExistError
+from service.record import SqliteRecordService, RecordDoesNotExistError
 
 if TYPE_CHECKING:
     from entity.record import Record
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-record_service = InMemoryRecordService
+record_service = SqliteRecordService
 
 
 def post_records(id: str, data: dict[str, str]) -> "Record":
@@ -21,7 +21,7 @@ def post_records(id: str, data: dict[str, str]) -> "Record":
 
     try: # record exists
         record = record_service.get_record(int_id)
-        record_service.update_record(int_id, data)
+        record = record_service.update_record(int_id, data)
 
     except RecordDoesNotExistError as e:  # record does not exist
         logger.warn(f"Record not found {e}")

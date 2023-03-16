@@ -1,5 +1,4 @@
 import jsonpickle
-import logging
 from flask import Blueprint, request
 
 from api.get_records import get_records

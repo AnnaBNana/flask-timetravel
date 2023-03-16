@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING
 
 from api.exceptions import ResourceNotFound
 from api.helpers import validate_record_id
-from service.record import InMemoryRecordService, RecordDoesNotExistError
+from service.record import SqliteRecordService, RecordDoesNotExistError
 
 if TYPE_CHECKING:
     from entity.record import Record
 
-record_service = InMemoryRecordService
+record_service = SqliteRecordService
 
 
 def get_records(id: str) -> "Record":
