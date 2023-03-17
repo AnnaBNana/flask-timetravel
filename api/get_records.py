@@ -18,3 +18,7 @@ def get_records(id: str) -> "Record":
         return record_service.get_record(int_id)
     except RecordDoesNotExistError as e:
         raise ResourceNotFound from e
+
+
+def get_records_v2(id: str, version: str = "latest") -> "Record":
+    """Gets record by id of specified version, defaults to latest"""

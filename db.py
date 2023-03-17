@@ -1,13 +1,24 @@
 import sqlite3
 
 
-create_table = """ CREATE TABLE IF NOT EXISTS Records (
+records_sql = """ CREATE TABLE IF NOT EXISTS records (
                id INTEGER PRIMARY KEY AUTOINCREMENT,
-               data TEXT NOT NULL
+               data TEXT NOT NULL,
+               created_at DATETIME
                );"""
+
+revisions_sql = """CREATE TABLE IF NOT EXISTS revisions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                records_id INTEGER NOT NULL,
+                version INTEGER NOT NULL,
+                timestamp DATETIME,
+                data TEXT NOT NULL,
+                FOREIGN KEY (records_id) REFERENCES records(id)
+                )"""
 
 def initialize_db() -> None:
     db_connection = sqlite3.connect('record-service.db')
     cursor = db_connection.cursor()
-    cursor.execute(create_table)
+    cursor.execute(records_sql)
+    cursor.execute(revisions_sql)
     db_connection.close()

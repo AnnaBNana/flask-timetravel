@@ -70,7 +70,7 @@ class SqliteRecordService(RecordService):
         db_connection = sqlite3.connect('record-service.db')
         db_connection.row_factory = sqlite3.Row
         cursor = db_connection.cursor()
-        record = cursor.execute("SELECT * FROM Records WHERE id = ?", (id,)).fetchone()
+        record = cursor.execute("SELECT * FROM records WHERE id = ?", (id,)).fetchone()
         db_connection.close()
 
         try:
@@ -85,7 +85,7 @@ class SqliteRecordService(RecordService):
         """Create record with data, key is ignored and auto-incremented."""
         db_connection = sqlite3.connect('record-service.db')
         cursor = db_connection.cursor()
-        cursor.execute("INSERT INTO Records (data) VALUES (?)", (jsonpickle.encode(record.data),))
+        cursor.execute("INSERT INTO records (data) VALUES (?)", (jsonpickle.encode(record.data),))
         record.id = cursor.lastrowid
 
         db_connection.commit()
@@ -103,9 +103,25 @@ class SqliteRecordService(RecordService):
 
         db_connection = sqlite3.connect('record-service.db')
         cursor = db_connection.cursor()
-        cursor.execute("UPDATE Records SET data = ? WHERE id = ?", (pickled_data, id,))
+        cursor.execute("UPDATE records SET data = ? WHERE id = ?", (pickled_data, id,))
 
         db_connection.commit()
         db_connection.close()
 
         return record
+
+
+class RecordRevisionHistoryService(RecordService):
+    """Stores records in database with versioning."""
+
+    @classmethod
+    def get_record(cls, id: int) -> "Record":
+        return super().get_record(id)
+    
+    @classmethod
+    def create_record(cls, record: "Record") -> "Record":
+        return super().create_record(record)
+    
+    @classmethod
+    def update_record(cls, id: int, data: dict[str, str]) -> "Record":
+        return super().update_record(id, data)

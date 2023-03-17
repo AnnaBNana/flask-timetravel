@@ -35,3 +35,7 @@ def post_records(id: str, data: dict[str, str]) -> "Record":
         record_service.create_record(record)
     
     return record
+
+
+def post_records_v2(id: str, data: dict[str, str], version: str = "latest") -> "Record":
+    """Creates new record by id of specified version, defaults to latest."""

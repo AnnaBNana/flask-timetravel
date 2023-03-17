@@ -1,21 +1,13 @@
-import jsonpickle
-from flask import Blueprint, request
-
-from api.get_records import get_records
-from api.post_records import post_records
+from flask import Blueprint
+from api.v1 import v1
+from api.v2 import v2
 
 
-new_api = Blueprint("api", __name__, url_prefix="/api/v1")
+records_api = Blueprint("api", __name__, url_prefix="/api")
 
+@records_api.route("/health")
+def health():
+    return {"ok": True}
 
-@new_api.route("/records/<id>", methods=["GET"])
-def get_record(id: str) -> str:
-    record = get_records(id)
-    return jsonpickle.encode(record)
-
-
-@new_api.route("/records/<id>", methods=["POST"])
-def post_record(id: str) -> str:
-    data = request.json
-    record = post_records(id, data)
-    return jsonpickle.encode(record)
+records_api.register_blueprint(v1)
+records_api.register_blueprint(v2)
