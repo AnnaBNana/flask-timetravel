@@ -29,3 +29,8 @@ def get_records_v2(id: str, version: str = "latest") -> dict[str, Any]:
         return v2_record_service.get_record(int_id, version)
     except RecordDoesNotExistError as e:
         raise ResourceNotFound from e
+    
+
+def get_versions_v2(id: str) -> list[str]:
+    """Gets all versions for id."""
+    return v2_record_service.get_versions(id)

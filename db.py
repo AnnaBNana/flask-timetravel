@@ -17,7 +17,7 @@ versioned_records_sql = """CREATE TABLE IF NOT EXISTS versioned_records (
                     );"""
 
 
-revisions_sql = """CREATE TABLE IF NOT EXISTS revisions (
+revisions_sql = """CREATE TABLE IF NOT EXISTS history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 records_id INTEGER NOT NULL,
                 version INTEGER NOT NULL,

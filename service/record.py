@@ -160,7 +160,7 @@ class RecordRevisionHistoryService:
 
     @classmethod
     def _get_version(cls, record_id: int, version: str) -> dict[str, Any]:
-        """Gets record of version from revisions table."""
+        """Gets record of version from history table."""
         db_connection = sqlite3.connect("record-service.db")
         db_connection.row_factory = sqlite3.Row
         cursor = db_connection.cursor()
@@ -175,7 +175,7 @@ class RecordRevisionHistoryService:
         ).fetchone()
 
         if not record:
-            query = "SELECT * FROM revisions WHERE records_id = ? AND version = ?"
+            query = "SELECT * FROM history WHERE records_id = ? AND version = ?"
 
             record = cursor.execute(
                 query,
@@ -223,7 +223,7 @@ class RecordRevisionHistoryService:
         cursor = db_connection.cursor()
 
         # insert old_record into revision
-        insert_revision_query = """INSERT INTO revisions
+        insert_revision_query = """INSERT INTO history
                     (records_id, version, timestamp, data)
                     VALUES (?, ?, ?, ?)
                     """
@@ -256,7 +256,7 @@ class RecordRevisionHistoryService:
     @classmethod
     def _get_latest_version(cls, id: int) -> int:
         """Gets revision with highest version history from revision table."""
-        query = """SELECT * FROM revisions where id = ? ORDER BY version"""
+        query = """SELECT * FROM history where id = ? ORDER BY version"""
         db_connection = sqlite3.connect("record-service.db")
         db_connection.row_factory = sqlite3.Row
         cursor = db_connection.cursor()
@@ -270,3 +270,21 @@ class RecordRevisionHistoryService:
             version = 0
 
         return version
+
+    @classmethod
+    def get_versions(cls, id: int) -> list[str]:
+        db_connection = sqlite3.connect("record-service.db")
+        db_connection.row_factory = sqlite3.Row
+        cursor = db_connection.cursor()
+
+        current_version_query = """SELECT version FROM versioned_records
+                                WHERE id = ?"""
+        historical_versions_query = """SELECT version FROM history
+                                    WHERE records_id = ?"""
+        
+        current_version = cursor.execute(current_version_query, (id,)).fetchone()
+        historical_versions = cursor.execute(historical_versions_query, (id,)).fetchall()
+
+        historical_versions.append(current_version)
+
+        return [row["version"] for row in historical_versions]
