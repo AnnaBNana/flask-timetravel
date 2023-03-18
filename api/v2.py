@@ -1,21 +1,21 @@
 import jsonpickle
 from flask import Blueprint, request
 
-from api.get_records import get_records
-from api.post_records import post_records
+from api.get_records import get_records_v2
+from api.post_records import post_records_v2
 
 
 v2 = Blueprint("v2", __name__, url_prefix="/v2")
 
 
-@v2.route("/records/<id>", methods=["GET"])
-def get_record(id: str) -> str:
-    record = get_records(id)
+@v2.route("/records/<id>/<version>", methods=["GET"])
+def get_record(id: str, version: str) -> str:
+    record = get_records_v2(id, version)
     return jsonpickle.encode(record)
 
 
-@v2.route("/records/<id>", methods=["POST"])
-def post_record(id: str) -> str:
+@v2.route("/records/<id>/<version>", methods=["POST"])
+def post_record(id: str, version: str) -> tuple[str, ...]:
     data = request.json
-    record = post_records(id, data)
-    return jsonpickle.encode(record)
+    post_records_v2(id, data, version)
+    return ("", 204)
