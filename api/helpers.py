@@ -7,5 +7,5 @@ def validate_record_id(id: str) -> int:
         assert int_id > 0
     except (ValueError, AssertionError) as e:
         raise ResourceKeyInvalidError from e
-    
+
     return int_id

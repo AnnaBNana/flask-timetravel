@@ -2,7 +2,11 @@ from typing import TYPE_CHECKING, Any
 
 from api.exceptions import ResourceNotFound
 from api.helpers import validate_record_id
-from service.record import SqliteRecordService, RecordDoesNotExistError, RecordRevisionHistoryService
+from service.record import (
+    SqliteRecordService,
+    RecordDoesNotExistError,
+    RecordRevisionHistoryService,
+)
 
 if TYPE_CHECKING:
     from entity.record import Record
@@ -29,8 +33,8 @@ def get_records_v2(id: str, version: str = "latest") -> dict[str, Any]:
         return v2_record_service.get_record(int_id, version)
     except RecordDoesNotExistError as e:
         raise ResourceNotFound from e
-    
 
-def get_versions_v2(id: str) -> list[str]:
+
+def get_versions_v2(id: str) -> list[int]:
     """Gets all versions for id."""
     return v2_record_service.get_versions(id)

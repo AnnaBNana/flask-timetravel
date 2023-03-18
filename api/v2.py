@@ -15,7 +15,7 @@ def get_record(id: str, version: str) -> str:
 
 
 @v2.route("/records/<id>/<version>", methods=["POST"])
-def post_record(id: str, version: str) -> tuple[str, ...]:
+def post_record(id: str, version: str) -> tuple[str, int]:
     data = request.json
     post_records_v2(id, data, version)
     return ("", 204)
