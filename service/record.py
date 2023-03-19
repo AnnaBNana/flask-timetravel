@@ -75,14 +75,16 @@ class SqliteRecordService(RecordService):
     @classmethod
     def get_record(cls, id: int) -> "Record":
         """Gets record by id or raises error if record does not exist."""
-        db_connection = sqlite3.connect(cls.dbname)
-        db_connection.row_factory = sqlite3.Row
-        cursor = db_connection.cursor()
-        record = cursor.execute("SELECT * FROM records WHERE id = ?", (id,)).fetchone()
-        db_connection.close()
+        with sqlite3.connect(cls.dbname) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            record = cursor.execute(
+                "SELECT * FROM records WHERE id = ?", (id,)
+            ).fetchone()
 
         try:
-            record_obj = Record(record["id"], jsonpickle.decode(record["data"]))
+            data = jsonpickle.decode(record["data"])
+            record_obj = Record(record["id"], data)
         except TypeError as e:
             raise RecordDoesNotExistError from e
 
@@ -91,16 +93,15 @@ class SqliteRecordService(RecordService):
     @classmethod
     def create_record(cls, record: "Record") -> "Record":
         """Create record with data, key is ignored and auto-incremented."""
-        db_connection = sqlite3.connect(cls.dbname)
-        cursor = db_connection.cursor()
-        cursor.execute(
-            "INSERT INTO records (data, created_at) VALUES (?, ?)",
-            (jsonpickle.encode(record.data), datetime.now()),
-        )
-        record.id = cursor.lastrowid
+        pickled_data = jsonpickle.encode(record.data)
 
-        db_connection.commit()
-        db_connection.close()
+        with sqlite3.connect(cls.dbname) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO records (data, created_at) VALUES (?, ?)",
+                (pickled_data, datetime.now()),
+            )
+            record.id = cursor.lastrowid
 
         return record
 
@@ -109,22 +110,18 @@ class SqliteRecordService(RecordService):
         """Update record with changes to the data dict."""
         record = cls.get_record(id)
         update_data(record.data, data)
-
         pickled_data = jsonpickle.encode(record.data)
 
-        db_connection = sqlite3.connect(cls.dbname)
-        cursor = db_connection.cursor()
-        cursor.execute(
-            "UPDATE records SET data = ?, updated_at = ? WHERE id = ?",
-            (
-                pickled_data,
-                datetime.now(),
-                id,
-            ),
-        )
-
-        db_connection.commit()
-        db_connection.close()
+        with sqlite3.connect(cls.dbname) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE records SET data = ?, updated_at = ? WHERE id = ?",
+                (
+                    pickled_data,
+                    datetime.now(),
+                    id,
+                ),
+            )
 
         return record
 
@@ -247,7 +244,12 @@ class RecordRevisionHistoryService:
                                 """
             cursor.execute(
                 update_record_query,
-                (jsonpickle.encode(old_version["data"]), version, datetime.now(), old_version["id"]),
+                (
+                    jsonpickle.encode(old_version["data"]),
+                    version,
+                    datetime.now(),
+                    old_version["id"],
+                ),
             )
 
     @classmethod
