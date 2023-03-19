@@ -9,7 +9,7 @@ from tests.service.record.fixtures import dbname, cursor, conn
 
 @pytest.fixture
 def service(dbname):
-    service = SqliteRecordService
+    service = SqliteRecordService()
     service.dbname = dbname
     yield service
 
