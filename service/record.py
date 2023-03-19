@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from entity.record import Record
+from api.helpers import update_data
 from db import dbname
 
 
@@ -61,7 +62,7 @@ class InMemoryRecordService(RecordService):
     @classmethod
     def update_record(cls, id: int, data: dict[str, str]) -> "Record":
         entry = cls.data[id]
-        entry.update_data(data)
+        update_data(entry.data, data)
 
         return entry
 
@@ -107,7 +108,7 @@ class SqliteRecordService(RecordService):
     def update_record(cls, id: int, data: dict[str, str]) -> "Record":
         """Update record with changes to the data dict."""
         record = cls.get_record(id)
-        record.update_data(data)
+        update_data(record.data, data)
 
         pickled_data = jsonpickle.encode(record.data)
 
@@ -237,6 +238,7 @@ class RecordRevisionHistoryService:
                 ),
             )
 
+            update_data(old_version["data"], data)
             # update record
             version = old_version["version"] + 1
             update_record_query = """UPDATE versioned_records
@@ -245,7 +247,7 @@ class RecordRevisionHistoryService:
                                 """
             cursor.execute(
                 update_record_query,
-                (jsonpickle.encode(data), version, datetime.now(), old_version["id"]),
+                (jsonpickle.encode(old_version["data"]), version, datetime.now(), old_version["id"]),
             )
 
     @classmethod

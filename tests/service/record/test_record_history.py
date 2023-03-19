@@ -69,6 +69,27 @@ def test_update_record(cursor, service):
     assert updated["version"] == 2
 
 
+def test_update_with_deletions(cursor, service):
+    data = {"name": "Anna", "species": "human"}
+    data_v2 = {"name": "AnnaBNana", "species": None}
+    service.create_record(data)
+    last_inserted = cursor.execute("SELECT * FROM versioned_records").fetchone()
+    old_version = service.get_record(last_inserted["id"])
+    service.update_record(old_version, data_v2)
+
+    historical = cursor.execute(
+        "SELECT * FROM history WHERE records_id = ?", (last_inserted["id"],)
+    ).fetchone()
+    updated = cursor.execute(
+        "SELECT * FROM versioned_records WHERE id = ?", (last_inserted["id"],)
+    ).fetchone()
+
+    assert historical["version"] == 1
+    assert jsonpickle.decode(historical["data"]) == data
+    assert updated["version"] == 2
+    assert jsonpickle.decode(updated["data"]) == {"name": "AnnaBNana"}
+
+
 def test_get_new_version(cursor, service):
     data = {"name": "Anna"}
     data_v2 = {"name": "Anna", "species": "human"}
