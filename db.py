@@ -1,6 +1,6 @@
 import sqlite3
 
-db_name = "record-service.db"
+dbname = "record-service.db"
 
 records_sql = """ CREATE TABLE IF NOT EXISTS records (
                id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +29,7 @@ revisions_sql = """CREATE TABLE IF NOT EXISTS history (
 
 
 def initialize_db() -> None:
-    with sqlite3.connect(db_name) as conn:
+    with sqlite3.connect(dbname) as conn:
         cursor = conn.cursor()
         cursor.execute(records_sql)
         cursor.execute(versioned_records_sql)

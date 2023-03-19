@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from entity.record import Record
-from db import db_name
+from db import dbname
 
 
 class RecordError(Exception):
@@ -69,10 +69,12 @@ class InMemoryRecordService(RecordService):
 class SqliteRecordService(RecordService):
     """Record service impplementation for Sqlite3."""
 
+    dbname: str = dbname
+
     @classmethod
     def get_record(cls, id: int) -> "Record":
         """Gets record by id or raises error if record does not exist."""
-        db_connection = sqlite3.connect("record-service.db")
+        db_connection = sqlite3.connect(cls.dbname)
         db_connection.row_factory = sqlite3.Row
         cursor = db_connection.cursor()
         record = cursor.execute("SELECT * FROM records WHERE id = ?", (id,)).fetchone()
@@ -88,7 +90,7 @@ class SqliteRecordService(RecordService):
     @classmethod
     def create_record(cls, record: "Record") -> "Record":
         """Create record with data, key is ignored and auto-incremented."""
-        db_connection = sqlite3.connect("record-service.db")
+        db_connection = sqlite3.connect(cls.dbname)
         cursor = db_connection.cursor()
         cursor.execute(
             "INSERT INTO records (data, created_at) VALUES (?, ?)",
@@ -109,7 +111,7 @@ class SqliteRecordService(RecordService):
 
         pickled_data = jsonpickle.encode(record.data)
 
-        db_connection = sqlite3.connect("record-service.db")
+        db_connection = sqlite3.connect(cls.dbname)
         cursor = db_connection.cursor()
         cursor.execute(
             "UPDATE records SET data = ?, updated_at = ? WHERE id = ?",
@@ -129,7 +131,7 @@ class SqliteRecordService(RecordService):
 class RecordRevisionHistoryService:
     """Stores records in database with versioning."""
 
-    dbname: str = db_name
+    dbname: str = dbname
 
     @classmethod
     def get_record(cls, id: int, version: str = "latest") -> dict[str, Any]:
