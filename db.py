@@ -31,6 +31,7 @@ revisions_sql = """CREATE TABLE IF NOT EXISTS history (
 
 
 def initialize_db() -> None:
+    """Create db tables."""
     with sqlite3.connect(dbname) as conn:
         cursor = conn.cursor()
         cursor.execute(records_sql)

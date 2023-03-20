@@ -244,7 +244,8 @@ class RecordRevisionHistoryService(RecordService):
 
             update_data(record.data, data)
             # update record
-            record.version += 1
+            version = record.version or 1
+            version += 1
             record.timestamp = datetime.now()
             update_record_query = """UPDATE versioned_records
                                 SET data = ?, version = ?, created_at = ?
