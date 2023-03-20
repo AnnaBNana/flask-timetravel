@@ -4,6 +4,7 @@ dbname = "record-service.db"
 
 records_sql = """ CREATE TABLE IF NOT EXISTS records (
                id INTEGER PRIMARY KEY AUTOINCREMENT,
+               slug TEXT NOT NULL UNIQUE,
                data TEXT NOT NULL,
                created_at DATETIME,
                updated_at DATETIME
@@ -12,6 +13,7 @@ records_sql = """ CREATE TABLE IF NOT EXISTS records (
 
 versioned_records_sql = """CREATE TABLE IF NOT EXISTS versioned_records (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    slug TEXT NOT NULL UNIQUE,
                     data TEXT NOT NULL,
                     version INTEGER NOT NULL,
                     created_at DATETIME
@@ -20,11 +22,11 @@ versioned_records_sql = """CREATE TABLE IF NOT EXISTS versioned_records (
 
 revisions_sql = """CREATE TABLE IF NOT EXISTS history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                records_id INTEGER NOT NULL,
+                records_slug TEXT NOT NULL,
                 version INTEGER NOT NULL,
                 timestamp DATETIME,
                 data TEXT NOT NULL,
-                FOREIGN KEY (records_id) REFERENCES records(id)
+                FOREIGN KEY (records_slug) REFERENCES records(slug)
                 );"""
 
 

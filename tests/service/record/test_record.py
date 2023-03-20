@@ -24,10 +24,10 @@ def test_create_record(cursor, service):
 
 
 def test_get_record(cursor, service):
-    record_obj = Record(1, {"name": "Anna", "species": "human"})
-    record = service.create_record(record_obj)
+    record_obj = Record("1", {"name": "Anna", "species": "human"})
+    service.create_record(record_obj)
 
-    record = service.get_record(record.id)
+    record = service.get_record(record_obj.slug)
 
     assert record.data == record_obj.data
 
@@ -38,13 +38,16 @@ def test_get_record_throws(cursor, service):
 
 
 def test_update_record(cursor, service):
-    record_obj = Record(1, {"name": "Anna", "species": "human"})
-    record = service.create_record(record_obj) 
-    data = {"name": "Anna", "species": None, "language": "english"}
+    data = {"name": "Anna", "species": "human"}
+    record = Record("1", data)
+    service.create_record(record) 
+    data_v2 = {"name": "Anna", "species": None, "language": "english"}
 
-    record = service.update_record(record.id, data)
+    service.update_record(record.slug, data_v2)
 
-    assert record.data == {"name": "Anna", "language": "english"}
+    updated_record = service.get_record(record.slug)
+
+    assert updated_record.data == {"name": "Anna", "language": "english"}
 
 def test_update_record_throws(cursor, service):
     with pytest.raises(RecordDoesNotExistError):

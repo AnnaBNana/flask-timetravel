@@ -1,4 +1,6 @@
 import jsonpickle
+from typing import Any
+
 from flask import Blueprint, request
 
 from api.records_api import API
@@ -16,7 +18,7 @@ def get_record(id: str) -> str:
 
 
 @v1.route("/records/<id>", methods=["POST"])
-def post_record(id: str) -> str:
+def post_record(id: str) -> tuple[str, int]:
     data = request.json
-    record = api.post_records(id, data)
-    return jsonpickle.encode(record)
+    api.post_records(id, data)
+    return ("", 204)

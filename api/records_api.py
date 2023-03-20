@@ -1,7 +1,6 @@
 import logging
 from typing import TYPE_CHECKING
 
-from api.helpers import validate_record_id
 from api.exceptions import ResourceNotFound
 from entity.record import Record
 from service.record import RecordDoesNotExistError
@@ -16,28 +15,26 @@ class API:
     def __init__(self, service: "RecordService") -> None:
         self.service = service
 
-    def get_records(self, id: str) -> Record:
+    def get_records(self, id: str, **kwargs) -> "Record":
         """Gets record by id."""
-        int_id = validate_record_id(id)
-
         try:
-            return self.service.get_record(int_id)
+            return self.service.get_record(id, **kwargs)
         except RecordDoesNotExistError as e:
             raise ResourceNotFound from e
 
-    def post_records(self, id: str, data: dict[str, str]) -> Record:
+    def post_records(self, id: str, data: dict[str, str], **kwargs) -> None:
         """Gets record by id"""
-        int_id = validate_record_id(id)
-
         try:  # record exists
-            record = self.service.get_record(int_id)
-            record = self.service.update_record(int_id, data)
+            record = self.service.get_record(id, **kwargs)
+            self.service.update_record(id, data, **kwargs)
 
         except RecordDoesNotExistError as e:  # record does not exist
             logger.warn(f"Record not found {e}")
             # exclude deletions
-            record_map = {k: v for k, v in data.items() if v}
+            revised_data = {k: v for k, v in data.items() if v}
 
-            record = self.service.create_record(Record(int_id, record_map))
-
-        return record
+            self.service.create_record(Record(id, revised_data, **kwargs))
+    
+    def get_versions(self, id: str, **kwargs) -> list[int]:
+        """Gets all versions for id."""
+        return self.service.get_versions(id, **kwargs)
