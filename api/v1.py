@@ -2,7 +2,7 @@ import jsonpickle
 from flask import Blueprint, request
 
 from api.records import API
-from service.record import SqliteRecordService
+from service.record.v1 import SqliteRecordService
 
 v1 = Blueprint("v1", __name__, url_prefix="/v1")
 api = API(SqliteRecordService())

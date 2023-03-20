@@ -2,7 +2,7 @@ import jsonpickle
 from flask import Blueprint, request
 
 from api.records import API
-from service.record import RecordRevisionHistoryService
+from service.record.v2 import RecordRevisionHistoryService
 
 v2 = Blueprint("v2", __name__, url_prefix="/v2")
 service = RecordRevisionHistoryService()

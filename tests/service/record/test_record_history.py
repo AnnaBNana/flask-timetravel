@@ -4,7 +4,8 @@ import jsonpickle
 import pytest
 
 from entity.record import Record
-from service.record import RecordDoesNotExistError, RecordRevisionHistoryService
+from service.record.base import RecordDoesNotExistError
+from service.record.v2 import RecordRevisionHistoryService
 
 if TYPE_CHECKING:
     from sqlite3 import Cursor

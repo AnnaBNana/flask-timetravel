@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING, Any
 
 from api.exceptions import ResourceNotFound
 from entity.record import Record
-from service.record import RecordDoesNotExistError
+from service.record.base import RecordDoesNotExistError
 
 if TYPE_CHECKING:
-    from service.record import RecordService
+    from service.record.base import RecordService
 
 logger = logging.getLogger(__name__)
 
