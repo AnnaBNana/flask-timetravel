@@ -3,7 +3,7 @@ from typing import Any
 
 from flask import Blueprint, request
 
-from api.records_api import API
+from api.records import API
 from service.record import SqliteRecordService
 
 
