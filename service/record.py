@@ -1,18 +1,18 @@
-import jsonpickle
 import sqlite3
 from datetime import datetime
-from typing import Any, Type
+from typing import Any
 
-from entity.record import Record
+import jsonpickle
+
 from api.helpers import update_data
 from db import dbname
-
+from entity.record import Record
 
 RECORD_LEDGER: dict[Any, Any] = {}
 
 
 class RecordError(Exception):
-    """Raised when there us an error during record transaction"""
+    """Raised when there us an error during record transaction."""
 
 
 class RecordDoesNotExistError(LookupError, RecordError):
@@ -24,29 +24,30 @@ class RecordAlreadyExistsError(RecordError):
 
 
 class RecordService:
-    """A base class for record services"""
+    """A base class for record services."""
 
-    record_class: Type[Record]
-
-    def get_record(self, slug: str, **kwargs) -> "Record":
+    def get_record(self, slug: str, **kwargs: Any) -> "Record":
+        """Get record by unique slug."""
         raise NotImplementedError
 
-    def create_record(self, record: "Record", **kwargs) -> None:
+    def create_record(self, record: "Record", **kwargs: Any) -> None:
+        """Create record from record data."""
         raise NotImplementedError
 
-    def update_record(self, slug: str, data: dict[str, str], **kwargs) -> "Record":
+    def update_record(self, slug: str, data: dict[str, Any], **kwargs: Any) -> "Record":
+        """Update record data according to data values."""
         raise NotImplementedError
 
-    def get_versions(self, slug: str, **kwargs) -> list[int]:
+    def get_versions(self, slug: str, **kwargs: Any) -> list[int]:
+        """Get versions for slug."""
         raise NotImplementedError
 
 
 class InMemoryRecordService(RecordService):
     """Record service implementation for in-memory storage."""
 
-    record_class = Record
-
     def get_record(self, slug: str, **kwargs: Any) -> "Record":
+        """Get in-memory record."""
         try:
             record = RECORD_LEDGER[slug]
         except KeyError as e:
@@ -55,12 +56,14 @@ class InMemoryRecordService(RecordService):
         return record
 
     def create_record(self, record: "Record", **kwargs: Any) -> None:
+        """Create in-memory record."""
         if record.slug in RECORD_LEDGER:
             raise RecordAlreadyExistsError
         else:
             RECORD_LEDGER[record.slug] = record
 
-    def update_record(self, slug: str, data: dict[str, str], **kwargs: Any) -> "Record":
+    def update_record(self, slug: str, data: dict[str, Any], **kwargs: Any) -> "Record":
+        """Update in-memory record."""
         entry = RECORD_LEDGER[slug]
         update_data(entry.data, data)
 
@@ -70,12 +73,11 @@ class InMemoryRecordService(RecordService):
 class SqliteRecordService(RecordService):
     """Record service impplementation for Sqlite3."""
 
-    dbname: str = dbname
-    record_class = Record
+    db_name: str = dbname
 
     def get_record(self, slug: str, **kwargs: Any) -> "Record":
-        """Gets record by slug or raises error if record does not exist."""
-        with sqlite3.connect(self.dbname) as conn:
+        """Get record by slug or raises error if record does not exist."""
+        with sqlite3.connect(self.db_name) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             record = cursor.execute(
@@ -94,20 +96,20 @@ class SqliteRecordService(RecordService):
         """Create record with data, key is ignored and auto-incremented."""
         pickled_data = jsonpickle.encode(record.data)
 
-        with sqlite3.connect(self.dbname) as conn:
+        with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO records (slug, data, created_at) VALUES (?, ?, ?)",
                 (record.slug, pickled_data, record.timestamp),
             )
 
-    def update_record(self, slug: str, data: dict[str, str], **kwargs: Any) -> "Record":
+    def update_record(self, slug: str, data: dict[str, Any], **kwargs: Any) -> "Record":
         """Update record with changes to the data dict."""
         record = self.get_record(slug)
         update_data(record.data, data)
         pickled_data = jsonpickle.encode(record.data)
 
-        with sqlite3.connect(self.dbname) as conn:
+        with sqlite3.connect(self.db_name) as conn:
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE records SET data = ?, updated_at = ? WHERE slug = ?",
@@ -124,9 +126,9 @@ class SqliteRecordService(RecordService):
 class RecordRevisionHistoryService(RecordService):
     """Stores records in database with versioning."""
 
-    dbname: str = dbname
+    db_name: str = dbname
 
-    def get_record(self, slug: str, **kwargs) -> "Record":
+    def get_record(self, slug: str, **kwargs: Any) -> "Record":
         """Get record by slug + version, defaults to latest."""
         version = kwargs.get("version", "latest")
         if version == "latest":
@@ -136,9 +138,9 @@ class RecordRevisionHistoryService(RecordService):
 
         return record
 
-    def _get_latest(cls, slug: str) -> "Record":
+    def _get_latest(self, slug: str) -> "Record":
         """Get record from versioned records table."""
-        with sqlite3.connect(cls.dbname) as conn:
+        with sqlite3.connect(self.db_name) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             query = "SELECT * FROM versioned_records WHERE slug = ?"
@@ -156,8 +158,8 @@ class RecordRevisionHistoryService(RecordService):
         )
 
     def _get_version(self, record_slug: str, version: str) -> "Record":
-        """Gets record of version from history table."""
-        with sqlite3.connect(self.dbname) as conn:
+        """Get record of version from history table."""
+        with sqlite3.connect(self.db_name) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             record_query = (
@@ -196,7 +198,7 @@ class RecordRevisionHistoryService(RecordService):
 
     def create_record(self, record: "Record", **kwargs: Any) -> None:
         """Create new record becomes latest with new version."""
-        with sqlite3.connect(self.dbname) as conn:
+        with sqlite3.connect(self.db_name) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             query = """INSERT INTO versioned_records
@@ -221,7 +223,7 @@ class RecordRevisionHistoryService(RecordService):
         if record.data == data:
             return record
 
-        with sqlite3.connect(self.dbname) as conn:
+        with sqlite3.connect(self.db_name) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 
@@ -261,8 +263,8 @@ class RecordRevisionHistoryService(RecordService):
         return record
 
     def get_versions(self, slug: str, **kwargs: Any) -> list[int]:
-        """Gets version numbers for slug."""
-        with sqlite3.connect(self.dbname) as conn:
+        """Get version numbers for slug."""
+        with sqlite3.connect(self.db_name) as conn:
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
 

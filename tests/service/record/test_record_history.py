@@ -1,33 +1,36 @@
-import pathlib
-import sqlite3
+from typing import TYPE_CHECKING, Generator
 
 import jsonpickle
 import pytest
 
 from entity.record import Record
-from service.record import RecordRevisionHistoryService, RecordDoesNotExistError
-from tests.service.record.fixtures import dbname, cursor, conn
+from service.record import RecordDoesNotExistError, RecordRevisionHistoryService
+
+if TYPE_CHECKING:
+    from sqlite3 import Cursor
 
 
 @pytest.fixture
-def service(dbname):
+def service(dbname: str) -> Generator[RecordRevisionHistoryService, None, None]:
     service = RecordRevisionHistoryService()
-    service.dbname = dbname
+    service.db_name = dbname
     yield service
 
 
-def test_create_record(cursor, service):
+def test_create_record(cursor: "Cursor", service: RecordRevisionHistoryService) -> None:
     data = {"name": "Anna"}
     record = Record("1", data)
     service.create_record(record)
 
-    record = cursor.execute("SELECT * FROM versioned_records").fetchone()
+    record_dict = cursor.execute("SELECT * FROM versioned_records").fetchone()
 
-    assert jsonpickle.decode(record["data"]) == data
-    assert record["version"] == 1
+    assert jsonpickle.decode(record_dict["data"]) == data
+    assert record_dict["version"] == 1
 
 
-def test_get_latest_record_version(cursor, service):
+def test_get_latest_record_version(
+    cursor: "Cursor", service: RecordRevisionHistoryService
+) -> None:
     data = {"name": "Anna", "species": "human"}
     record = Record("1", data)
     service.create_record(record)
@@ -39,12 +42,14 @@ def test_get_latest_record_version(cursor, service):
     assert record.version == 1
 
 
-def test_get_raises(cursor, service):
+def test_get_raises(cursor: "Cursor", service: RecordRevisionHistoryService) -> None:
     with pytest.raises(RecordDoesNotExistError):
-        service.get_record(1)
+        service.get_record("1")
 
 
-def test_get_raises_with_version(cursor, service):
+def test_get_raises_with_version(
+    cursor: "Cursor", service: RecordRevisionHistoryService
+) -> None:
     data = {"name": "Anna", "species": "human"}
     record = Record("1", data)
     service.create_record(record)
@@ -54,7 +59,7 @@ def test_get_raises_with_version(cursor, service):
         service.get_record(last_inserted["slug"], version=4)
 
 
-def test_update_record(cursor, service):
+def test_update_record(cursor: "Cursor", service: RecordRevisionHistoryService) -> None:
     data = {"name": "Anna"}
     record = Record("1", data)
     data_v2 = {"name": "Anna", "species": "human"}
@@ -72,7 +77,9 @@ def test_update_record(cursor, service):
     assert updated["version"] == 2
 
 
-def test_update_with_deletions(cursor, service):
+def test_update_with_deletions(
+    cursor: "Cursor", service: RecordRevisionHistoryService
+) -> None:
     data = {"name": "Anna", "species": "human"}
     record = Record("1", data)
     data_v2 = {"name": "AnnaBNana", "species": None}
@@ -92,7 +99,9 @@ def test_update_with_deletions(cursor, service):
     assert jsonpickle.decode(updated["data"]) == {"name": "AnnaBNana"}
 
 
-def test_get_new_version(cursor, service):
+def test_get_new_version(
+    cursor: "Cursor", service: RecordRevisionHistoryService
+) -> None:
     data = {"name": "Anna"}
     record = Record("1", data)
     data_v2 = {"name": "Anna", "species": "human"}
@@ -105,7 +114,9 @@ def test_get_new_version(cursor, service):
     assert record.data == data_v2
 
 
-def test_get_old_version(cursor, service):
+def test_get_old_version(
+    cursor: "Cursor", service: RecordRevisionHistoryService
+) -> None:
     data = {"name": "Anna"}
     record = Record("1", data)
     data_v2 = {"name": "Anna", "species": "human"}
@@ -118,7 +129,9 @@ def test_get_old_version(cursor, service):
     assert record.data == data
 
 
-def test_get_latest_version(cursor, service):
+def test_get_latest_version(
+    cursor: "Cursor", service: RecordRevisionHistoryService
+) -> None:
     data = {"name": "Anna"}
     record = Record("1", data)
     data_v2 = {"name": "Anna", "species": "human"}
@@ -131,7 +144,7 @@ def test_get_latest_version(cursor, service):
     assert record.data == data_v2
 
 
-def test_get_versions(cursor, service):
+def test_get_versions(cursor: "Cursor", service: RecordRevisionHistoryService) -> None:
     data = {"name": "Anna"}
     record = Record("1", data)
     data_v2 = {"name": "Anna", "species": "human"}

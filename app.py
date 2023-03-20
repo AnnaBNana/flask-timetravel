@@ -1,8 +1,7 @@
 from flask import Flask
 
-from api.api import records_api
-
 import db
+from api.api import records_api
 
 app = Flask(__name__)
 

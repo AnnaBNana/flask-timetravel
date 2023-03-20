@@ -1,21 +1,24 @@
-import pytest
+from typing import TYPE_CHECKING, Generator
 
 import jsonpickle
+import pytest
 
 from entity.record import Record
-from service.record import SqliteRecordService, RecordDoesNotExistError
-from tests.service.record.fixtures import dbname, cursor, conn
+from service.record import RecordDoesNotExistError, SqliteRecordService
+
+if TYPE_CHECKING:
+    from sqlite3 import Cursor
 
 
 @pytest.fixture
-def service(dbname):
+def service(dbname: str) -> Generator[SqliteRecordService, None, None]:
     service = SqliteRecordService()
-    service.dbname = dbname
+    service.db_name = dbname
     yield service
 
 
-def test_create_record(cursor, service):
-    record_obj = Record(1, {"name": "Anna"})
+def test_create_record(cursor: "Cursor", service: SqliteRecordService) -> None:
+    record_obj = Record("1", {"name": "Anna"})
     service.create_record(record_obj)
 
     record = cursor.execute("SELECT * FROM records").fetchone()
@@ -23,7 +26,7 @@ def test_create_record(cursor, service):
     assert jsonpickle.decode(record["data"]) == record_obj.data
 
 
-def test_get_record(cursor, service):
+def test_get_record(cursor: "Cursor", service: SqliteRecordService) -> None:
     record_obj = Record("1", {"name": "Anna", "species": "human"})
     service.create_record(record_obj)
 
@@ -32,15 +35,15 @@ def test_get_record(cursor, service):
     assert record.data == record_obj.data
 
 
-def test_get_record_throws(cursor, service):
+def test_get_record_throws(cursor: "Cursor", service: SqliteRecordService) -> None:
     with pytest.raises(RecordDoesNotExistError):
-        service.get_record(1)
+        service.get_record("1")
 
 
-def test_update_record(cursor, service):
+def test_update_record(cursor: "Cursor", service: SqliteRecordService) -> None:
     data = {"name": "Anna", "species": "human"}
     record = Record("1", data)
-    service.create_record(record) 
+    service.create_record(record)
     data_v2 = {"name": "Anna", "species": None, "language": "english"}
 
     service.update_record(record.slug, data_v2)
@@ -49,6 +52,7 @@ def test_update_record(cursor, service):
 
     assert updated_record.data == {"name": "Anna", "language": "english"}
 
-def test_update_record_throws(cursor, service):
+
+def test_update_record_throws(cursor: "Cursor", service: SqliteRecordService) -> None:
     with pytest.raises(RecordDoesNotExistError):
-        service.update_record(1, {"test": "data"})
+        service.update_record("1", {"test": "data"})
