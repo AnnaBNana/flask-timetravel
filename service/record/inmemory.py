@@ -5,7 +5,6 @@ from service.record.base import (
     RecordDoesNotExistError,
     RecordService,
 )
-from service.record.helpers import update_data
 
 if TYPE_CHECKING:
     from entity.record import Record
@@ -35,6 +34,6 @@ class InMemoryRecordService(RecordService):
     def update_record(self, slug: str, data: dict[str, Any], **kwargs: Any) -> "Record":
         """Update in-memory record."""
         entry = RECORD_LEDGER[slug]
-        update_data(entry.data, data)
+        entry.update_data(data)
 
         return entry

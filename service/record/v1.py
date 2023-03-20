@@ -7,7 +7,6 @@ import jsonpickle
 from db import dbname
 from entity.record import Record
 from service.record.base import RecordDoesNotExistError, RecordService
-from service.record.helpers import update_data
 
 
 class SqliteRecordService(RecordService):
@@ -46,7 +45,7 @@ class SqliteRecordService(RecordService):
     def update_record(self, slug: str, data: dict[str, Any], **kwargs: Any) -> "Record":
         """Update record with changes to the data dict."""
         record = self.get_record(slug)
-        update_data(record.data, data)
+        record.update_data(data)
         pickled_data = jsonpickle.encode(record.data)
 
         with sqlite3.connect(self.db_name) as conn:

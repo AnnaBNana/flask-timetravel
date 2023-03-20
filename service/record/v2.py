@@ -7,7 +7,6 @@ import jsonpickle
 from db import dbname
 from entity.record import Record
 from service.record.base import RecordDoesNotExistError, RecordService
-from service.record.helpers import update_data
 
 
 class RecordRevisionHistoryService(RecordService):
@@ -129,7 +128,7 @@ class RecordRevisionHistoryService(RecordService):
                 ),
             )
 
-            update_data(record.data, data)
+            record.update_data(data)
             # update record
             if record.version:
                 record.version += 1

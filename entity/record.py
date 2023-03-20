@@ -11,3 +11,11 @@ class Record:
         self.data = data
         self.version = kwargs.get("version")
         self.timestamp = kwargs.get("timestamp", datetime.now())
+
+    def update_data(self, changes: dict[str, Any]) -> None:
+        """Update data dict in place according to changes dict."""
+        for key, value in changes.items():
+            if value:
+                self.data[key] = value
+            else:
+                self.data.pop(key, None)
